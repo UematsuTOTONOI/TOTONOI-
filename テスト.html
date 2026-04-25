@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOTONOI 日報</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:#f5f3ef;color:#1a1a1a;padding-bottom:80px;}
+.topbar{background:#2a6b55;color:white;padding:12px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
+.topbar-title{font-size:15px;font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.top-prog{font-size:12px;opacity:0.75;}
+.submit-btn{background:white;color:#2a6b55;border:none;padding:7px 18px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;}
+.submit-btn:hover{background:#e8f5ee;}
+.container{max-width:680px;margin:0 auto;padding:14px 14px 0;}
+.card{background:white;border-radius:12px;padding:16px;margin-bottom:14px;border:0.5px solid #e0ddd8;}
+.card-title{font-size:12px;font-weight:600;letter-spacing:0.06em;color:#666;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0ede8;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.field{margin-bottom:10px;}
+.field label{font-size:11px;color:#888;display:block;margin-bottom:4px;}
+input[type=date],input[type=time],input[type=text],textarea,select{width:100%;border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;background:white;outline:none;color:#1a1a1a;-webkit-appearance:none;appearance:none;}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+input:focus,textarea:focus,select:focus{border-color:#2a6b55;box-shadow:0 0 0 2px rgba(42,107,85,0.1);}
+.shift-wrap{display:flex;gap:6px;flex-wrap:wrap;}
+.shift-btn{padding:6px 13px;border-radius:99px;border:1px solid #ccc;background:white;font-size:12px;cursor:pointer;color:#666;transition:all 0.12s;}
+.shift-btn.active{background:#2a6b55;color:white;border-color:#2a6b55;}
+.prog-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.prog-bg{flex:1;height:6px;background:#eee;border-radius:99px;}
+.prog-fill{height:100%;background:#2a6b55;border-radius:99px;transition:width 0.3s;width:0%;}
+.prog-txt{font-size:11px;color:#888;white-space:nowrap;}
+.todo-item{display:flex;align-items:flex-start;gap:10px;padding:7px 8px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:background 0.12s;user-select:none;}
+.todo-item:hover{background:#f5f3ef;}
+.todo-item.done .todo-label{text-decoration:line-through;color:#aaa;}
+.todo-item.done .cb{background:#2a6b55;border-color:#2a6b55;}
+.todo-item.done .chk{opacity:1;}
+.hi-red{border-color:#e08080!important;background:#fdf0f0;}
+.hi-green{border-color:#80c0a0!important;background:#f0faf5;}
+.hi-amber{border-color:#f0c060!important;background:#fdf8ee;}
+.cb{width:18px;height:18px;min-width:18px;border-radius:4px;border:1.5px solid #bbb;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.12s;}
+.chk{opacity:0;transition:opacity 0.1s;}
+.todo-body{flex:1;}
+.todo-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.todo-label{font-size:13px;color:#1a1a1a;line-height:1.4;}
+.todo-time{font-size:10px;color:#999;white-space:nowrap;background:#eee;padding:1px 6px;border-radius:4px;}
+.todo-note{font-size:11px;color:#888;margin-top:2px;}
+.section-divider{display:flex;align-items:center;gap:8px;margin:10px 0 4px;padding:6px 8px;border-radius:8px;}
+.sd-mon{background:#f5f0ff;}
+.sd-mon .sd-label{font-size:11px;color:#5a2a8c;font-weight:600;}
+.sd-thu{background:#fff5e0;}
+.sd-thu .sd-label{font-size:11px;color:#8c5a00;font-weight:600;}
+.empty-msg{text-align:center;color:#bbb;padding:20px;font-size:13px;}
+.extra-card{border:1px solid #e0ddd8;border-radius:10px;padding:12px;margin-bottom:8px;background:#fafaf8;position:relative;}
+.rm-btn{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:#e8e8e8;border:none;cursor:pointer;font-size:13px;color:#666;display:flex;align-items:center;justify-content:center;}
+.rm-btn:hover{background:#e08080;color:white;}
+.add-btn{width:100%;padding:9px;border:1.5px dashed #ccc;border-radius:8px;background:none;color:#999;font-size:13px;cursor:pointer;margin-top:4px;transition:all 0.12s;}
+.add-btn:hover{border-color:#2a6b55;color:#2a6b55;background:#f0faf5;}
+.pill-group{display:flex;gap:5px;flex-wrap:wrap;}
+.pill{padding:5px 11px;border-radius:99px;border:1px solid #ddd;background:white;font-size:12px;cursor:pointer;color:#666;transition:all 0.12s;}
+.pill.active{background:#2a6b55;color:white;border-color:#2a6b55;}
+.pill.sat-active{background:#f5a623;color:white;border-color:#f5a623;}
+.pill.na-active{background:#888;color:white;border-color:#888;}
+.room-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.room-tab{padding:4px 10px;border-radius:6px;border:1px solid #ddd;background:white;font-size:12px;cursor:pointer;color:#666;}
+.room-tab.active{background:#2a6b55;color:white;border-color:#2a6b55;}
+.room-tab.filled{border-color:#85b7eb;color:#185fa5;background:#e6f1fb;}
+.room-panel{display:none;}
+.room-panel.active{display:block;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:white;padding:11px 22px;border-radius:99px;font-size:13px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,0.85);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:14px;color:#555;}
+.overlay.show{display:flex;}
+.spinner{width:28px;height:28px;border:3px solid #ddd;border-top-color:#2a6b55;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-title">📋 TOTONOI 日報</span>
+  <div class="topbar-right">
+    <span class="top-prog" id="topProg">-/-</span>
+    <button class="submit-btn" onclick="submitReport()">送信</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="spinner"></div><span>送信中...</span></div>
+<div class="toast" id="toast"></div>
+
+<div class="container">
+
+  <!-- ① 基本情報 -->
+  <div class="card">
+    <div class="card-title">基本情報</div>
+    <div class="form-row">
+      <div class="field">
+        <label>担当者名</label>
+        <select id="staffName">
+          <option value="">選択してください</option>
+          <option>里吉</option>
+          <option>梶原</option>
+          <option>ほのか</option>
+          <option>阿部</option>
+          <option>りょうな</option>
+          <option>りこ</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>勤務日</label>
+        <input type="date" id="workDate" onchange="onDateChange()">
+      </div>
+    </div>
+    <div class="field">
+      <label>シフト</label>
+      <div class="shift-wrap">
+        <button class="shift-btn" onclick="selectShift(this,'早番')">早番</button>
+        <button class="shift-btn" onclick="selectShift(this,'中番（現場）')">中番（現場）</button>
+        <button class="shift-btn" onclick="selectShift(this,'中番（定期清掃）')">中番（定期清掃）</button>
+        <button class="shift-btn" onclick="selectShift(this,'遅番')">遅番</button>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:0;">
+      <div class="field" style="margin-bottom:0;"><label>勤務開始</label><input type="time" id="startTime"></div>
+      <div class="field" style="margin-bottom:0;"><label>勤務終了</label><input type="time" id="endTime"></div>
+    </div>
+  </div>
+
+  <!-- ② 業務チェックリスト -->
+  <div class="card">
+    <div class="card-title">業務チェックリスト</div>
+    <div class="prog-row"><div class="prog-bg"><div class="prog-fill" id="progFill"></div></div><div class="prog-txt" id="progTxt">0 / 0</div></div>
+    <div id="checklist"><div class="empty-msg">↑ シフトを選択してください</div></div>
+  </div>
+
+  <!-- ③ 通常業務以外 -->
+  <div class="card">
+    <div class="card-title">通常業務以外</div>
+    <p style="font-size:11px;color:#aaa;margin-bottom:8px;">施設改善・任務タスクを記録</p>
+    <div id="extraList"></div>
+    <button class="add-btn" onclick="addExtra()">＋ 追加する</button>
+  </div>
+
+  <!-- ④ お客様情報 -->
+  <div class="card">
+    <div class="card-title">お客様情報</div>
+    <p style="font-size:11px;color:#aaa;margin-bottom:8px;">チェックインがあった棟を記録してください</p>
+    <div class="room-tabs" id="roomTabs"></div>
+    <div id="roomPanels"></div>
+  </div>
+
+  <!-- ⑤ その他連絡事項 -->
+  <div class="card">
+    <div class="card-title">その他連絡事項</div>
+    <textarea id="notes" rows="4" placeholder="引き継ぎ・気になること・申し送り事項など"></textarea>
+  </div>
+
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbx55qhEqhaXZPMKIuSEhjmTBqprKlJFENmfygkBa2uMOjZ7BzsYkY3QCmxW0UsrVJ-_/exec';
+
+// ===== 中番（現場）共通タスク =====
+const MID_BASE = [
+  {id:'n01',label:'仕込み（野菜カット・サラダ用含む）'},
+  {id:'n02',label:'翌日準備'},
+  {id:'n03',label:'次の日の翌準表作成'},
+  {id:'n04',label:'食器洗浄'},
+  {id:'n05',label:'食材チェック【買出し確認】'},
+  {id:'n06',label:'食材チェック＆発注'},
+  {id:'n07',label:'チェック（全体確認）'},
+  {id:'n08',label:'庭の確認'},
+  {id:'n09',label:'翌日の予約最終確認'},
+  {id:'n10',label:'販売品在庫チェック'},
+  {id:'n11',label:'CI対応（チェックイン）',time:'14:30'},
+  {id:'n12',label:'ホテルクリーンサービス清掃連絡',time:'15:00〜'},
+  {id:'n13',label:'15:30サウナ案内（火付け）',time:'15:30'},
+  {id:'n14',label:'翌日の発注数確認（長池・お茶屋）'},
+  {id:'n15',label:'メール確認・返信'},
+  {id:'n16',label:'アメニティ確認'},
+  {id:'n17',label:'無料貸出品確認'},
+  {id:'n18',label:'ウェルカム（キャンプファイヤー）実施'},
+  {id:'n19',label:'CIお客様アンケート入力'},
+  {id:'n20',label:'飯盒炊飯オプション'},
+  {id:'n21',label:'マシュマロ作りオプション'},
+  {id:'n22',label:'17:30サウナ案内',time:'17:30'},
+  {id:'n23',label:'夕食配膳'},
+  {id:'n24',label:'洗濯'},
+  {id:'n25',label:'厨房整理整頓'},
+  {id:'n26',label:'食器棚に戻す'},
+  {id:'n27',label:'アンケート送信',time:'19:00'},
+  {id:'n28',label:'火気連絡',time:'19:00'},
+  {id:'n29',label:'重油確認'},
+  {id:'n30',label:'19:30サウナ案内',time:'19:30'},
+  {id:'n31',label:'ウェルカムお客様記録入力',time:'19:30'},
+  {id:'n32',label:'OPお客様記録入力'},
+  {id:'n33',label:'Instagramメッセージ確認・返信（共有）'},
+  {id:'n34',label:'夜メール確認・返信（共有）'},
+  {id:'n35',label:'airbnbメッセージ確認・返信（共有）'},
+  {id:'n36',label:'施設改善シート記入・確認'},
+];
+
+// 遅番専用クローズタスク
+const LATE_CLOSE = [
+  {id:'l01',label:'食器回収・ガス元栓確認',time:'21:30'},
+  {id:'l02',label:'サウナ最終チェック',note:'タープを畳み、水風呂抜く',cls:'hi-red'},
+  {id:'l03',label:'受付カギ閉め',time:'21:00'},
+  {id:'l04',label:'車の鍵回収',time:'21:30'},
+  {id:'l05',label:'サイレントタイム送信',time:'22:00'},
+  {id:'l06',label:'食器洗浄'},
+  {id:'l07',label:'厨房ゴミ袋交換（1/2以上で交換）'},
+  {id:'l08',label:'電話転送設定',note:'TOTONOIとふじとわ'},
+];
+
+// 遅番 = 中番と同じ（IDに_s付けて重複回避）+ クローズ
+const SOBAN_MID = MID_BASE.map(t => ({...t, id: t.id + '_s'}));
+
+const TASKS = {
+  '早番': [
+    {id:'m01',label:'公式LINEの確認',time:'7:30'},
+    {id:'m02',label:'朝食調理'},
+    {id:'m03',label:'朝食配膳',time:'8:00'},
+    {id:'m04',label:'洗濯＆乾燥',time:'7:30〜9:30'},
+    {id:'m05',label:'メールチェック',time:'8:00〜'},
+    {id:'m06',label:'キャンセル確認・キャンセル料発生者にPayn送信',time:'7:30〜10:00'},
+    {id:'m07',label:'2日後の予約表作成',time:'8:15〜8:40'},
+    {id:'m08',label:'ウェルカムボード作成・確認',time:'8:15〜8:40'},
+    {id:'m09',label:'翌日タイムテーブル作成',time:'7:30〜10:00'},
+    {id:'m10',label:'受付棟清掃',time:'8:30',note:'灰捨ても含む'},
+    {id:'m11',label:'受付棟トイレ清掃'},
+    {id:'m12',label:'薪の補充（5束程度）'},
+    {id:'m13',label:'チェックアウト案内LINE送信',time:'9:00'},
+    {id:'m14',label:'販売品在庫チェック',time:'9:30'},
+    {id:'m15',label:'Google口コミ確認',time:'9:45'},
+    {id:'m16',label:'チェックアウト業務',time:'10:00'},
+    {id:'m17',label:'精算業務',time:'10:00'},
+    {id:'m18',label:'食器洗浄'},
+    {id:'m19',label:'HCSに鍵・共有事項伝える',time:'10:00'},
+    {id:'m20',label:'宿泊様のエアコンON',time:'10:00'},
+    {id:'m21',label:'サウナ清掃',time:'10:00〜'},
+    {id:'m22',label:'レイトチェックアウト対応'},
+    {id:'m23',label:'灰捨て'},
+    {id:'m24',label:'夕食調理'},
+    {id:'m25',label:'野菜発注',monThu:true},
+  ],
+  '中番（現場）': MID_BASE,
+  '中番（定期清掃）': [
+    {id:'c01',label:'ウェーバー鉄板洗浄'},
+    {id:'c02',label:'ウェーバーガス口清掃'},
+    {id:'c03',label:'布団洗い2棟（S1棟・SD1棟）'},
+    {id:'c04',label:'洗車'},
+    {id:'c05',label:'Bドームスチーム'},
+    {id:'c06',label:'Cドームスチーム'},
+    {id:'c07',label:'Gドームスチーム'},
+    {id:'c08',label:'AガゼボSteam'},
+    {id:'c09',label:'BガゼボSteam'},
+    {id:'c10',label:'CガゼボSteam'},
+    {id:'c11',label:'DガゼボSteam'},
+    {id:'c12',label:'EガゼボSteam'},
+    {id:'c13',label:'FガゼボSteam'}, 
+　　{id:'c13',label:'FガゼボSteam'},
+    {id:'c14',label:'受付棟スチーム'},
+    {id:'c15',label:'キッチン換気扇'},
+    {id:'c16',label:'トイレ換気扇'},
+    {id:'c17',label:'グリル上換気扇'},
+    {id:'c18',label:'シャワー室換気扇'},
+    {id:'c19',label:'換気扇フィルターシール交換（全棟）'},
+    {id:'c20',label:'ガゼボエアコン清掃'},
+    {id:'c21',label:'ドームエアコン'},
+    {id:'c22',label:'サウナ煙突清掃'},
+    {id:'c23',label:'グリル清掃'},
+    {id:'c24',label:'ガゼボ電球'},
+    {id:'c25',label:'ガゼボ外側窓ふき'},
+    {id:'c26',label:'ガゼボ小窓ふき'},
+    {id:'c27',label:'ドーム窓拭き'},
+    {id:'c28',label:'ドームケルヒャー'},
+    {id:'c29',label:'ABC前側溝清掃'},
+    {id:'c30',label:'草刈り'},
+    {id:'c31',label:'ペンキ塗り'},
+    {id:'c32',label:'ベッドネジ締め'},
+    {id:'c33',label:'建具調整'},
+    {id:'c34',label:'G棟ソファカバー交換'},
+    {id:'c35',label:'G浴槽防カビ',note:'2ヶ月に一回'},
+    {id:'c36',label:'窓のサン'},
+    {id:'c37',label:'ポップ類貼り換え'},
+    {id:'c38',label:'キッチン冷蔵庫'},
+    {id:'c39',label:'管理棟各フロアー掃除機'},
+  ],
+  '遅番': [...SOBAN_MID, ...LATE_CLOSE],
+};
+
+const MON_TASKS = [
+  {id:'x01',label:'備品チェック＆Amazon発注',note:'水の残量も確認（残り4箱で発注）'},
+  {id:'x02',label:'薪の残量確認・発注',note:'残り1段以下で発注（2〜3日で届く）'},
+  {id:'x03',label:'ゴミ捨て（月・水・金）'},
+];
+
+// ===== State =====
+let currentShift = '';
+let checked = new Set();
+let isMonday = false;
+let isMonOrThu = false;
+
+// ===== Date =====
+function onDateChange() {
+  const v = document.getElementById('workDate').value;
+  if (!v) return;
+  const d = new Date(v + 'T00:00:00');
+  const day = d.getDay();
+  isMonday = day === 1;
+  isMonOrThu = day === 1 || day === 4;
+  renderChecklist();
+}
+
+// ===== Shift =====
+function selectShift(btn, shift) {
+  document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentShift = shift;
+  checked.clear();
+  renderChecklist();
+}
+
+// ===== Checklist =====
+function getFilteredTasks(shift) {
+  const tasks = TASKS[shift] || [];
+  return tasks.filter(t => !(t.monThu && !isMonOrThu));
+}
+
+function renderChecklist() {
+  const el = document.getElementById('checklist');
+  if (!currentShift) { el.innerHTML = '<div class="empty-msg">↑ シフトを選択してください</div>'; return; }
+
+  const filtered = getFilteredTasks(currentShift);
+  const showMon = isMonday && (currentShift === '早番' || currentShift === '中番（現場）' || currentShift === '遅番');
+
+  let html = filtered.map(t => taskHtml(t)).join('');
+
+  if (showMon) {
+    html += `<div class="section-divider sd-mon"><span style="font-size:14px;">📅</span><span class="sd-label">月曜日追加タスク</span></div>`;
+    html += MON_TASKS.map(t => taskHtml(t)).join('');
+  }
+
+  el.innerHTML = html;
+  updateProg();
+}
+
+function taskHtml(t) {
+  const done = checked.has(t.id);
+  const cls = [t.cls || '', done ? 'done' : ''].join(' ').trim();
+  return `<div class="todo-item ${cls}" onclick="toggleTask('${t.id}',this)">
+    <div class="cb"><svg class="chk" width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="todo-body">
+      <div class="todo-row"><span class="todo-label">${t.label}</span>${t.time ? `<span class="todo-time">${t.time}</span>` : ''}</div>
+      ${t.note ? `<div class="todo-note">${t.note}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function toggleTask(id, el) {
+  if (checked.has(id)) { checked.delete(id); el.classList.remove('done'); }
+  else { checked.add(id); el.classList.add('done'); }
+  updateProg();
+}
+
+function updateProg() {
+  const all = document.querySelectorAll('#checklist .todo-item').length;
+  const done = document.querySelectorAll('#checklist .todo-item.done').length;
+  const pct = all ? Math.round(done / all * 100) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progTxt').textContent = done + ' / ' + all;
+  document.getElementById('topProg').textContent = done + '/' + all;
+}
+
+// ===== Extra Tasks =====
+let extraCount = 0;
+function addExtra() {
+  extraCount++;
+  const id = 'ex' + extraCount;
+  const div = document.createElement('div');
+  div.className = 'extra-card'; div.id = id;
+  div.innerHTML = `
+    <button class="rm-btn" onclick="document.getElementById('${id}').remove()">×</button>
+    <div class="field" style="margin-bottom:8px;padding-right:28px;">
+      <label>種別</label>
+      <select id="${id}-type" onchange="toggleReason('${id}')">
+        <option value="">選択してください</option>
+        <option>施設改善</option>
+        <option>任務されているタスク</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:8px;">
+      <label>内容</label>
+      <input type="text" id="${id}-content" placeholder="何を行ったか">
+    </div>
+    <div class="field" style="margin-bottom:8px;">
+      <label>所要時間</label>
+      <input type="text" id="${id}-dur" placeholder="例：30分">
+    </div>
+    <div id="${id}-rblock" style="display:none;">
+      <div class="field" style="margin-bottom:0;">
+        <label>なぜ行おうと思ったか（施設改善の理由）</label>
+        <textarea id="${id}-reason" rows="2" placeholder="理由・背景を記載してください"></textarea>
+      </div>
+    </div>`;
+  document.getElementById('extraList').appendChild(div);
+}
+
+function toggleReason(id) {
+  const v = document.getElementById(id + '-type').value;
+  document.getElementById(id + '-rblock').style.display = v === '施設改善' ? 'block' : 'none';
+}
+
+function collectExtras() {
+  return Array.from(document.querySelectorAll('.extra-card')).map(c => {
+    const id = c.id;
+    return {
+      type: (document.getElementById(id + '-type') || {}).value || '',
+      content: (document.getElementById(id + '-content') || {}).value || '',
+      duration: (document.getElementById(id + '-dur') || {}).value || '',
+      reason: (document.getElementById(id + '-reason') || {}).value || ''
+    };
+  }).filter(x => x.type || x.content);
+}
+
+// ===== Customer Info =====
+const ROOMS = ['A棟','B棟','C棟','D棟','E棟','F棟','G棟'];
+const AGES = ['10代','20代','30代','40代','50代','60代以上','不明'];
+const TYPES = ['家族','友達','カップル','その他'];
+const SATS = ['判断できない','1','2','3','4','5'];
+let roomData = {};
+
+function initRooms() {
+  document.getElementById('roomTabs').innerHTML = ROOMS.map((r, i) =>
+    `<button class="room-tab${i === 0 ? ' active' : ''}" id="rtab-${r}" onclick="switchRoom('${r}')">${r}</button>`
+  ).join('');
+  document.getElementById('roomPanels').innerHTML = ROOMS.map((r, i) => `
+    <div class="room-panel${i === 0 ? ' active' : ''}" id="rpanel-${r}">
+      <div class="field" style="margin-bottom:8px;"><label>年代</label>
+        <div class="pill-group">${AGES.map(a => `<button class="pill" onclick="setRoom('${r}','age','${a}',this)">${a}</button>`).join('')}</div>
+      </div>
+      <div class="field" style="margin-bottom:8px;"><label>属性</label>
+        <div class="pill-group">${TYPES.map(t => `<button class="pill" onclick="setRoom('${r}','type','${t}',this)">${t}</button>`).join('')}</div>
+      </div>
+      <div class="field" style="margin-bottom:8px;"><label>話した内容・印象</label>
+        <textarea id="conv-${r}" rows="2" placeholder="お客様との会話・気づきなど" oninput="markRoom('${r}')"></textarea>
+      </div>
+      <div class="field" style="margin-bottom:0;"><label>推定満足度</label>
+        <div class="pill-group">
+          ${SATS.map(s => {
+            const lbl = s === '判断できない' ? '不明' : '★' + s;
+            return `<button class="pill" onclick="setSat('${r}','${s}',this)">${lbl}</button>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function switchRoom(r) {
+  document.querySelectorAll('.room-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.room-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('rtab-' + r).classList.add('active');
+  document.getElementById('rpanel-' + r).classList.add('active');
+}
+
+function setRoom(room, key, val, btn) {
+  btn.closest('.pill-group').querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (!roomData[room]) roomData[room] = {};
+  roomData[room][key] = val;
+  markRoom(room);
+}
+
+function setSat(room, val, btn) {
+  btn.closest('.pill-group').querySelectorAll('.pill').forEach(b => b.classList.remove('active', 'sat-active', 'na-active'));
+  btn.classList.add(val === '判断できない' ? 'na-active' : 'sat-active');
+  if (!roomData[room]) roomData[room] = {};
+  roomData[room].sat = val;
+  markRoom(room);
+}
+
+function markRoom(r) {
+  const conv = (document.getElementById('conv-' + r) || {}).value || '';
+  const rd = roomData[r] || {};
+  const tab = document.getElementById('rtab-' + r);
+  if (rd.age || rd.type || rd.sat || conv.trim()) tab.classList.add('filled');
+  else tab.classList.remove('filled');
+}
+
+function collectRooms() {
+  return ROOMS.map(r => {
+    const conv = (document.getElementById('conv-' + r) || {}).value || '';
+    const rd = roomData[r] || {};
+    if (!rd.age && !rd.type && !rd.sat && !conv.trim()) return null;
+    return { room: r, age: rd.age || '', type: rd.type || '', conversation: conv.trim(), satisfaction: rd.sat || '' };
+  }).filter(Boolean);
+}
+
+// ===== Submit =====
+function submitReport() {
+  const name = document.getElementById('staffName').value;
+  const date = document.getElementById('workDate').value;
+  const shift = currentShift;
+  if (!name) { toast('担当者を選択してください'); return; }
+  if (!date) { toast('勤務日を入力してください'); return; }
+  if (!shift) { toast('シフトを選択してください'); return; }
+
+  const filtered = getFilteredTasks(shift);
+  const showMon = isMonday && (shift === '早番' || shift === '中番（現場）' || shift === '遅番');
+  const all = showMon ? [...filtered, ...MON_TASKS] : filtered;
+  const done = all.filter(t => checked.has(t.id)).map(t => t.label);
+  const undone = all.filter(t => !checked.has(t.id)).map(t => t.label);
+
+  const d = new Date(date + 'T00:00:00');
+  const days = ['日','月','火','水','木','金','土'];
+
+  const payload = {
+    timestamp: new Date().toISOString(),
+    staffName: name,
+    workDate: date,
+    dayName: days[d.getDay()],
+    shift,
+    startTime: document.getElementById('startTime').value,
+    endTime: document.getElementById('endTime').value,
+    completedCount: done.length,
+    totalCount: all.length,
+    completedTasks: done,
+    incompleteTasks: undone,
+    extraTasks: collectExtras(),
+    customers: collectRooms(),
+    notes: document.getElementById('notes').value.trim()
+  };
+
+  if (GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    toast('⚠ GAS URLが未設定です（開発モード）');
+    console.log('送信データ:', JSON.stringify(payload, null, 2));
+    return;
+  }
+
+  document.getElementById('overlay').classList.add('show');
+  fetch(GAS_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => { document.getElementById('overlay').classList.remove('show'); toast('✓ 日報を送信しました'); })
+  .catch(e => { document.getElementById('overlay').classList.remove('show'); toast('送信エラー: ' + e.message); });
+}
+
+// ===== Toast =====
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ===== Init =====
+(function init() {
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth() + 1).padStart(2, '0'), d = String(now.getDate()).padStart(2, '0');
+  document.getElementById('workDate').value = `${y}-${m}-${d}`;
+  onDateChange();
+  initRooms();
+})();
+</script>
+</body>
+</html>
