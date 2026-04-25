@@ -1,0 +1,252 @@
+<script>
+(function () {
+
+  // =========================
+  // CONFIG安全ガード
+  // =========================
+  if (typeof CONFIG === 'undefined') {
+    alert('config.js が読み込まれていません');
+    return;
+  }
+
+  const answers = {};
+
+  // =========================
+  // テーマ適用
+  // =========================
+  if (CONFIG.themeColor) {
+    document.documentElement.style.setProperty('--theme', CONFIG.themeColor);
+  }
+  if (CONFIG.accentColor) {
+    document.documentElement.style.setProperty('--accent', CONFIG.accentColor);
+    document.documentElement.style.setProperty('--light', CONFIG.accentColor + '22');
+  }
+
+  // =========================
+  // ロゴ
+  // =========================
+  const logoArea = document.getElementById('logo-area');
+  logoArea.innerHTML = CONFIG.logoUrl
+    ? `<img src="${CONFIG.logoUrl}" class="logo-img">`
+    : `<div class="logo-text">${CONFIG.shopName}</div>`;
+
+  document.title = `アンケート | ${CONFIG.shopName}`;
+
+  // =========================
+  // Google口コミURL
+  // =========================
+  let reviewUrl = CONFIG.googleReviewUrl;
+
+  if (!reviewUrl && CONFIG.googlePlaceId) {
+    reviewUrl = `https://search.google.com/local/writereview?placeid=${CONFIG.googlePlaceId}`;
+  }
+
+  const reviewBtn = document.getElementById('review-btn');
+
+  if (reviewUrl && !reviewUrl.includes('xxxx')) {
+    reviewBtn.href = reviewUrl;
+    reviewBtn.target = "_blank";
+  } else {
+    reviewBtn.style.display = "none";
+  }
+
+  // =========================
+  // 質問描画
+  // =========================
+  const wrap = document.getElementById('questions-wrap');
+
+  CONFIG.questions.forEach((q, idx) => {
+
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    card.innerHTML = `
+      <div class="q-label">
+        ${idx + 1}. ${q.label}
+        ${q.required ? '<span class="req">必須</span>' : ''}
+      </div>
+      <div id="body-${q.id}"></div>
+      <div class="error-msg" id="err-${q.id}">入力してください</div>
+    `;
+
+    wrap.appendChild(card);
+
+    const body = card.querySelector(`#body-${q.id}`);
+
+    if (q.type === 'stars') renderStars(body, q);
+    if (q.type === 'radio' || q.type === 'checkbox') renderOptions(body, q);
+    if (q.type === 'textarea') renderTextarea(body, q);
+  });
+
+  // =========================
+  // 星
+  // =========================
+  function renderStars(container, q) {
+    const wrap = document.createElement('div');
+    wrap.className = 'stars';
+
+    const label = document.createElement('div');
+    label.className = 'star-label';
+
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.type = "button";
+      btn.textContent = "★";
+
+      btn.onclick = () => {
+        answers[q.id] = i;
+        update();
+        highlight(wrap, i);
+        label.textContent = ['','最悪','不満','普通','満足','最高'][i];
+      };
+
+      wrap.appendChild(btn);
+    }
+
+    wrap.addEventListener('mouseleave', () => {
+      highlight(wrap, answers[q.id] || 0);
+    });
+
+    container.appendChild(wrap);
+    container.appendChild(label);
+  }
+
+  function highlight(wrap, val) {
+    [...wrap.children].forEach((b, i) => {
+      b.classList.toggle('active', i < val);
+    });
+  }
+
+  // =========================
+  // 選択肢
+  // =========================
+  function renderOptions(container, q) {
+
+    const wrap = document.createElement('div');
+
+    q.options.forEach(opt => {
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+
+      input.type = q.type;
+      input.name = q.id;
+      input.value = opt;
+
+      input.onchange = () => {
+        if (q.type === 'radio') {
+          answers[q.id] = opt;
+        } else {
+          const checked = [...wrap.querySelectorAll('input:checked')]
+            .map(i => i.value);
+          answers[q.id] = checked.length ? checked : [];
+        }
+        update();
+      };
+
+      label.append(input, document.createTextNode(opt));
+      wrap.appendChild(label);
+    });
+
+    container.appendChild(wrap);
+  }
+
+  // =========================
+  // textarea
+  // =========================
+  function renderTextarea(container, q) {
+
+    const ta = document.createElement('textarea');
+
+    ta.oninput = () => {
+      answers[q.id] = ta.value;
+      update();
+    };
+
+    container.appendChild(ta);
+  }
+
+  // =========================
+  // 判定
+  // =========================
+  function isAnswered(q) {
+    const a = answers[q.id];
+    if (!a) return false;
+    if (typeof a === 'string' && !a.trim()) return false;
+    if (Array.isArray(a) && a.length === 0) return false;
+    return true;
+  }
+
+  function update() {
+    const required = CONFIG.questions.filter(q => q.required);
+    const ok = required.every(isAnswered);
+
+    document.getElementById('submit-btn').disabled = !ok;
+  }
+
+  // =========================
+  // 送信
+  // =========================
+  document.getElementById('survey-form').onsubmit = async (e) => {
+    e.preventDefault();
+
+    document.getElementById('sending-overlay').classList.add('active');
+
+    const payload = {
+      shop: CONFIG.shopName,
+      answers,
+      time: new Date().toISOString()
+    };
+
+    try {
+      if (CONFIG.gasEndpoint) {
+        const res = await fetch(CONFIG.gasEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        console.log("送信成功", await res.text());
+      }
+    } catch (e) {
+      console.error("送信失敗", e);
+    }
+
+    showThanks();
+  };
+
+  // =========================
+  // サンクス + コピー
+  // =========================
+  function showThanks() {
+
+    document.getElementById('survey-form').style.display = "none";
+    document.getElementById('thanks-screen').style.display = "block";
+
+    const copyQ = CONFIG.questions.find(q => q.isCopyTarget);
+    const text = copyQ ? (answers[copyQ.id] || '') : '';
+
+    if (!text.trim()) return;
+
+    document.getElementById('review-guide').style.display = 'block';
+
+    const btn = document.getElementById('copy-btn');
+
+    btn.onclick = async () => {
+
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+
+      btn.textContent = "コピー完了！";
+    };
+  }
+
+})();
+</script>
